@@ -1,0 +1,81 @@
+#!/usr/bin/env python
+#-*- encoding: utf-8 -*-
+
+import requests
+import time
+import re
+from lxml import etree
+import pandas as pd
+from bs4 import BeautifulSoup
+
+def getPage(url):
+    headers = {
+        {'Connection': 'keep-alive', 'Accept-Encoding': 'gzip, deflate', 
+         'Accept': '*/*', 'User-Agent': 'Mozilla/5.0'}
+    }
+    try:
+        page = requests.get(url,headers = headers)
+        return page
+    except Exception as e:
+        print(str(e))
+        
+def getList():
+    start_url = 'https://book.douban.com/tag/青春?&type=T&start={}'
+    i = 1
+    infoList = []
+    print(0)
+    while i < 4: 
+        url = start_url + str(20*i) 
+        kv = {'User-Agent': 'Mozilla/5.0'} 
+        r = requests.get(url,headers=kv) 
+        selector = etree.HTML(r.text)
+        print('正在爬取第', str(i),'页')
+        i += 1
+        informations = selector.xpath('.//ul[@class="subject-list"]/li')
+        
+        for inf in informations: 
+            info_bookname = inf.xpath('normalize-space(.//div[@class="info"]/h2/a/@title)')
+            info_str = inf.xpath('normalize-space(.//div[@class="pub"]/text())')#[0].replaceAll("\r|\n", "")
+            info_author = ''
+            strlist = info_str.split('/')
+            i = 0
+            index = 0
+            while i < 4:
+                print(i)
+                if("出版社" in strlist[i]):
+                    index = i
+                i += 1
+            
+            j = 0
+            while j < index:
+                info_author += strlist[j]
+                j += 1
+            
+            info_publisher = strlist[index]#.replaceAll("\r|\n", "")
+            #info_date = strlist[2]#.replaceAll("\r|\n", "")
+            info_price = strlist[index+1].replace('元','')#.replaceAll("\r|\n", "")
+            info_score = inf.xpath('normalize-space(.//span[@class="rating_nums"]/text())')#[0].replaceAll("\r|\n", "")
+            info_commentsnum = inf.xpath('normalize-space(.//span[@class="pl"]/text())')#[0].replaceAll("\r|\n", "")
+            #info_commentsnum = info_commentsnum[1:info_commentsnum.len()-1]
+            
+            infoList.append([info_bookname,info_author,info_publisher,info_price,info_score,info_commentsnum])
+    
+        time.sleep(20)
+    return infoList
+
+
+def listToCsv(list):
+    df = pd.DataFrame(list,columns=['书名','作者','出版社','售价','豆瓣评分','评论数量'])
+    file = open("1.csv", "w", encoding='utf-8')
+    df.to_csv(file, line_terminator="\n", index=False)
+    file.close()
+    print(df)
+    return list
+ 
+def main():
+    List = getList() 
+    listToCsv(List)
+ 
+ 
+if __name__=='__main__': 
+	main()

@@ -1,0 +1,13 @@
+from pyecharts import WordCloud
+import pandas as pd
+df_publisher = publisher[ ['出版社','value'] ].groupby(['出版社']).sum()#按照出版社进行分组，得到不同出版社的图书数量
+df_pbler=df_publisher.sort_values(by=['value'],ascending=False)
+df_pbler.to_csv('出版社.csv')
+df_pbler
+wd = pd.read_csv('出版社.csv')
+word = [i[0] for i in wd[['出版社']].values]
+value = [i[0] for i in wd[['value']].values]
+shop = WordCloud(width=400, height=400)
+shop.add('词云', word, value, word_size_range=[5, 20], shape='star')
+shop.render('publisher.html')
+shop

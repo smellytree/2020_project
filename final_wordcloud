@@ -1,0 +1,75 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+from pyecharts.charts import WordCloud
+from pyecharts.charts import Tab
+import wordcloud
+def publisher(path):
+    df = pd.read_csv(path)
+    df.dropna()#去掉空值
+    publisher = df[(True^df['出版社'].isin([0]))]
+    publisher['value'] = 1#添加计数器
+    df_publisher = publisher[ ['出版社','value'] ].groupby(['出版社']).sum()#按照出版社进行分组，得到不同出版社的图书数量
+    df_pbler=df_publisher.sort_values(by=['value'],ascending=False)
+    df_pbler.to_csv('出版社.csv')
+    wd = pd.read_csv('出版社.csv')
+    word = [i[0] for i in wd[['出版社']].values]
+    value = [i[0] for i in wd[['value']].values]
+    #print(word)
+    #print(value)
+    words=""
+    index=0;
+    for i in word:
+        if word[index]!='***':
+            index2=0
+            for index2 in range(value[index]):
+                words = words + word[index]+" "
+                index2=index2+1
+                #print("words:"+words)
+        index=index+1
+        
+    wc = wordcloud.WordCloud(
+    width=500,height=400,
+    #设置词云输出图片的背景，字体步长，后面这个是随机种子，为了保证随机产生的结果一样，一般默认就是这样，不需要过多纠结
+    background_color='white',font_step=3,random_state=False,
+    #词语水平方向排版出现的频率,默认 0.9 (所以词语垂直方向排版出现频率为 0.1 ) 
+    prefer_horizontal=0.9,font_path='simhei.ttf')
+    #输出词云
+    t=wc.generate(words)
+    t.to_image().save('t.png')
+    return t
+def writer(path):
+    df = pd.read_csv(path)
+    df.dropna()#去掉空值
+    author = df[(True^df['作者'].isin([0]))]
+    author['aut_num'] = 1#添加计数器
+    df_author = author[ ['作者','aut_num'] ].groupby(['作者']).sum()#按照作者进行分组，得到不同作者的图书数量
+    df_auth=df_author.sort_values(by=['aut_num'],ascending=False)
+    df_auth.to_csv('作者.csv')
+    wr = pd.read_csv('作者.csv')
+    writer = [i[0] for i in wr[['作者']].values]
+    fre = [i[0] for i in wr[['aut_num']].values]
+    auths=""
+    index=0;
+    for i in writer:
+        if writer[index]!='***':
+            index2=0
+            for index2 in range(fre[index]):
+                auths=auths+writer[index]+" "
+                index2+index2+1
+    #    print(auth_tmp)
+        index=index+1
+    author = wordcloud.WordCloud(width=500,height=400,
+    #设置词云输出图片的背景，字体步长，后面这个是随机种子，为了保证随机产生的结果一样，一般默认就是这样，不需要过多纠结
+    background_color='white',font_step=3,random_state=False,
+    #词语水平方向排版出现的频率,默认 0.9 (所以词语垂直方向排版出现频率为 0.1 ) 
+    prefer_horizontal=0.9,font_path='simhei.ttf')
+    w=author.generate(auths)
+    w.to_image().save('w.png')
+    return w
+def main():
+    path = "MLAB.csv"
+    publisher(path)
+    writer(path)
+    print("writer\n")
+if __name__ == '__main__':
+    main()
